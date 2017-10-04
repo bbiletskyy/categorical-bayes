@@ -2,24 +2,24 @@ package org.apache.spark.ml.classification
 
 import org.apache.hadoop.fs.Path
 import org.apache.spark.ml.PredictorParams
-import org.apache.spark.ml.linalg.{BLAS, DenseMatrix, DenseVector, Matrix, SparseVector, Vector, Vectors}
-import org.apache.spark.ml.param.{DoubleParam, IntArrayParam, ParamMap, ParamValidators}
+import org.apache.spark.ml.linalg.{ BLAS, DenseMatrix, DenseVector, Matrix, SparseVector, Vector, Vectors }
+import org.apache.spark.ml.param.{ DoubleParam, IntArrayParam, ParamMap, ParamValidators }
 import org.apache.spark.ml.util._
 import org.apache.spark.mllib.util.MLUtils
 import org.apache.spark.sql.functions.col
-import org.apache.spark.sql.{DataFrame, Dataset}
+import org.apache.spark.sql.{ DataFrame, Dataset }
 
 /**
-  * Params for Categorical Bayes Classifiers.
-  */
+ * Params for Categorical Bayes Classifiers.
+ */
 private[classification] trait CategoricalBayesParams extends PredictorParams {
 
   /**
-    * The smoothing parameter.
-    * (default = 1.0).
-    *
-    * @group param
-    */
+   * The smoothing parameter.
+   * (default = 1.0).
+   *
+   * @group param
+   */
   final val smoothing: DoubleParam = new DoubleParam(this, "smoothing", "The smoothing parameter.",
     ParamValidators.gtEq(0))
 
@@ -27,11 +27,11 @@ private[classification] trait CategoricalBayesParams extends PredictorParams {
   final def getSmoothing: Double = $(smoothing)
 
   /**
-    * Feature cardinalities parameter: i-th elememt of the array corresponds to
-    * the number of distinct values that i-th feature can take.
-    *
-    * @group param
-    */
+   * Feature cardinalities parameter: i-th elememt of the array corresponds to
+   * the number of distinct values that i-th feature can take.
+   *
+   * @group param
+   */
   final val featureCardinalities: IntArrayParam = new IntArrayParam(this, "featureCardinalities", "Number of values per each feature",
     featureCardinalitiesValidator)
 
@@ -43,12 +43,13 @@ private[classification] trait CategoricalBayesParams extends PredictorParams {
   }
 }
 
-/** Categorical version of Naive Bayes method.
-  *
-  * @param uid
-  */
+/**
+ * Categorical version of Naive Bayes method.
+ *
+ * @param uid
+ */
 class CategoricalBayes(override val uid: String)
-  extends ProbabilisticClassifier[Vector, CategoricalBayes, CategoricalBayesModel]
+    extends ProbabilisticClassifier[Vector, CategoricalBayes, CategoricalBayesModel]
     with CategoricalBayesParams with DefaultParamsWritable {
 
   def this() = this(Identifiable.randomUID("cb"))
@@ -77,32 +78,37 @@ class CategoricalBayes(override val uid: String)
     val labelsNumber = labelCounts.size
     val lambda = getSmoothing
     val smoothedLogTotal = math.log(totalTrainingExamples + labelCounts.size * lambda)
-    val smoothedLabelLogProbs: Map[Double, Double] = labelCounts.map { case (label, count) =>
-      val smoothedLabelLogProb = math.log(count + lambda) - smoothedLogTotal
-      (label, smoothedLabelLogProb)
+    val smoothedLabelLogProbs: Map[Double, Double] = labelCounts.map {
+      case (label, count) =>
+        val smoothedLabelLogProb = math.log(count + lambda) - smoothedLogTotal
+        (label, smoothedLabelLogProb)
     }
 
     val labelFeatureCounts: Array[Map[(Double, Double), Double]] =
       labelFeatureIndexCounts.groupBy { case ((label, feature, index), count) => index }.toArray
         .sortBy { case (index, grouped) => index }
-        .map { case (index, grouped) =>
-          grouped.map { case ((label, feature, index), count) => ((feature, label), count) }.toMap.withDefaultValue(0.0)
+        .map {
+          case (index, grouped) =>
+            grouped.map { case ((label, feature, index), count) => ((feature, label), count) }.toMap.withDefaultValue(0.0)
         }
     val pi = Vectors.dense(smoothedLabelLogProbs.toArray.sortBy { case (label, logProb) => label }.map(_._2))
 
     val thetas: Array[Matrix] = getFeatureCardinalities.map { featureCardinality =>
       val matrixElements = Array.fill(featureCardinality * labelsNumber)(lambda)
       new DenseMatrix(featureCardinality, labelsNumber, matrixElements, true)
-    }.zip(labelFeatureCounts).map { case (matrix, labelFeatureCount) =>
-      for {feature <- 0 to matrix.numRows - 1;
-           label <- 0 to matrix.numCols - 1} {
-        val smoothedCondProbNumerator = matrix(feature, label) + labelFeatureCount((feature, label))
-        val featureCardinality = matrix.numRows
-        val smoothedCondProbDenominator = lambda * featureCardinality + labelCounts(label)
-        val smoothedCondProb = math.log(smoothedCondProbNumerator) - math.log(smoothedCondProbDenominator)
-        matrix.update(feature, label, smoothedCondProb)
-      }
-      matrix
+    }.zip(labelFeatureCounts).map {
+      case (matrix, labelFeatureCount) =>
+        for {
+          feature <- 0 to matrix.numRows - 1;
+          label <- 0 to matrix.numCols - 1
+        } {
+          val smoothedCondProbNumerator = matrix(feature, label) + labelFeatureCount((feature, label))
+          val featureCardinality = matrix.numRows
+          val smoothedCondProbDenominator = lambda * featureCardinality + labelCounts(label)
+          val smoothedCondProb = math.log(smoothedCondProbNumerator) - math.log(smoothedCondProbDenominator)
+          matrix.update(feature, label, smoothedCondProb)
+        }
+        matrix
     }
 
     new CategoricalBayesModel(uid, pi, thetas)
@@ -111,11 +117,11 @@ class CategoricalBayes(override val uid: String)
   override def copy(extra: ParamMap): CategoricalBayes = defaultCopy(extra)
 }
 
-class CategoricalBayesModel private[ml](
-                                         override val uid: String,
-                                         val pi: Vector,
-                                         val thetas: Array[Matrix])
-  extends ProbabilisticClassificationModel[Vector, CategoricalBayesModel]
+class CategoricalBayesModel private[ml] (
+  override val uid: String,
+  val pi: Vector,
+  val thetas: Array[Matrix])
+    extends ProbabilisticClassificationModel[Vector, CategoricalBayesModel]
     with CategoricalBayesParams with MLWritable {
 
   override val numFeatures: Int = thetas.size
@@ -199,7 +205,7 @@ object CategoricalBayesModel extends MLReadable[CategoricalBayesModel] {
       val data: DataFrame = sparkSession.read.parquet(dataPath)
       val dataML = MLUtils.convertMatrixColumnsToML(data, "m")
 
-      val head :: tail  = dataML.select("m").collect().map(r => r.getAs[Matrix]("m")).toList
+      val head :: tail = dataML.select("m").collect().map(r => r.getAs[Matrix]("m")).toList
       val pi: Vector = head.rowIter.next()
       val thetas: Array[Matrix] = tail.toArray
 
