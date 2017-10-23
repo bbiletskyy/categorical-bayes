@@ -29,9 +29,9 @@ class CategoricalBayesSpec extends FlatSpec {
       .setFeaturesCol("features")
       .setFeatureCardinalities(Array(2))
       .setSmoothing(0.0)
-      .setPredictionCol("MB-predicted")
-      .setProbabilityCol("MB-probability")
-      .setRawPredictionCol("MB-rawPrediction")
+      .setPredictionCol("CB-predicted")
+      .setProbabilityCol("CB-probability")
+      .setRawPredictionCol("CB-rawPrediction")
 
     val pipeline = new Pipeline().setStages(Array(
       categoricalBayes
@@ -71,9 +71,9 @@ class CategoricalBayesSpec extends FlatSpec {
       .setFeaturesCol("features")
       .setFeatureCardinalities(Array(2, 2))
       .setSmoothing(0.0)
-      .setPredictionCol("MB-predicted")
-      .setProbabilityCol("MB-probability")
-      .setRawPredictionCol("MB-rawPrediction")
+      .setPredictionCol("CB-predicted")
+      .setProbabilityCol("CB-probability")
+      .setRawPredictionCol("CB-rawPrediction")
 
     val pipeline = new Pipeline().setStages(Array(
       categoricalBayes
@@ -113,9 +113,9 @@ class CategoricalBayesSpec extends FlatSpec {
       .setFeaturesCol("features")
       .setFeatureCardinalities(Array(2))
       .setSmoothing(0.001)
-      .setPredictionCol("MB-predicted")
-      .setProbabilityCol("MB-probability")
-      .setRawPredictionCol("MB-rawPrediction")
+//      .setPredictionCol("CB-predicted")
+//      .setProbabilityCol("CB-probability")
+//      .setRawPredictionCol("CB-rawPrediction")
 
     val pipeline = new Pipeline().setStages(Array(
       categoricalBayes
@@ -153,9 +153,6 @@ class CategoricalBayesSpec extends FlatSpec {
     val categoricalBayes = new CategoricalBayes()
       .setLabelCol("label")
       .setFeaturesCol("features")
-      .setPredictionCol("MB-predicted")
-      .setProbabilityCol("MB-probability")
-      .setRawPredictionCol("MB-rawPrediction")
       .setFeatureCardinalities(Array(2, 2))
       .setSmoothing(0.0)
 
@@ -188,8 +185,9 @@ class CategoricalBayesSpec extends FlatSpec {
     import org.apache.hadoop.fs.Path
     val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
 
-    if (fs.exists(new Path(modelPath)))
-      fs.delete(new Path(modelPath), true)
+    val path = new Path(modelPath)
+    if (fs.exists(path))
+      fs.delete(path, true)
   }
 }
 

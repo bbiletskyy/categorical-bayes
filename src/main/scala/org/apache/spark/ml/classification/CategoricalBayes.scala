@@ -188,8 +188,8 @@ object CategoricalBayesModel extends MLReadable[CategoricalBayesModel] {
       val pi = Data(new DenseMatrix(1, instance.pi.toArray.length, instance.pi.toArray, isTransposed = true))
       val dataPath = new Path(path, "data").toString
 
-      val data: Seq[Data] = Seq(pi) ++ instance.thetas.map(m => Data(m))
-      sparkSession.createDataFrame(data).repartition(1).write.parquet(dataPath)
+      val thetas: Seq[Data] = Seq(pi) ++ instance.thetas.map(Data(_))
+      sparkSession.createDataFrame(thetas).repartition(1).write.parquet(dataPath)
     }
   }
 
