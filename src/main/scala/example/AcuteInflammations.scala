@@ -1,10 +1,10 @@
 package example
 
 import org.apache.spark.ml.Pipeline
-import org.apache.spark.ml.classification.{CategoricalBayes}
+import org.apache.spark.ml.classification.{ CategoricalBayes }
 import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
-import org.apache.spark.ml.feature.{StringIndexer, VectorAssembler}
-import org.apache.spark.ml.tuning.{CrossValidator, ParamGridBuilder}
+import org.apache.spark.ml.feature.{ StringIndexer, VectorAssembler }
+import org.apache.spark.ml.tuning.{ CrossValidator, ParamGridBuilder }
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions.udf
 
@@ -19,10 +19,10 @@ object AcuteInflammations {
     import spark.implicits._
 
     val rawData = spark.sparkContext.textFile("data/diagnosis.data")
-        .map(line => line.trim)
-        .map(line => line.split("\t"))
-        .filter(cols => cols.size == 8)
-        .map(cols => (cols(0), cols(1), cols(2), cols(3), cols(4), cols(5), cols(6), cols(7)))
+      .map(line => line.trim)
+      .map(line => line.split("\t"))
+      .filter(cols => cols.size == 8)
+      .map(cols => (cols(0), cols(1), cols(2), cols(3), cols(4), cols(5), cols(6), cols(7)))
       .toDF(
         "temp", // Temperature of patient
         "nausea", //"Occurrence of nausea

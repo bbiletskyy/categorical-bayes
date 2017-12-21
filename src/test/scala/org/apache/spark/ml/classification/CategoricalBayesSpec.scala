@@ -113,9 +113,9 @@ class CategoricalBayesSpec extends FlatSpec {
       .setFeaturesCol("features")
       .setFeatureCardinalities(Array(2))
       .setSmoothing(0.001)
-//      .setPredictionCol("CB-predicted")
-//      .setProbabilityCol("CB-probability")
-//      .setRawPredictionCol("CB-rawPrediction")
+    //      .setPredictionCol("CB-predicted")
+    //      .setProbabilityCol("CB-probability")
+    //      .setRawPredictionCol("CB-rawPrediction")
 
     val pipeline = new Pipeline().setStages(Array(
       categoricalBayes
